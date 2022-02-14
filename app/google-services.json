@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "552884179161",
+    "project_id": "recruitz-7e5dd",
+    "storage_bucket": "recruitz-7e5dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552884179161:android:b0cd17b1cd399d282baec8",
+        "android_client_info": {
+          "package_name": "com.example.recruitz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "552884179161-3np8dc314obu9r2lcoer2im35rukovro.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy1VaalSRUgvzDKFRbBVuvT937ABUhcVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "552884179161-3np8dc314obu9r2lcoer2im35rukovro.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
