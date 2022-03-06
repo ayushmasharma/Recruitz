@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Recruitz</string>
+
+    <!-- IntroActivity-->
+    <string name="lets_get_started_text">Get Started</string>
+    <string name="intro_text_description">
+        Recruitment Portal for Banasthali University
+    </string>
+    <string name="sign_in">SIGN IN</string>
+    <string name="sign_up">SIGN UP</string>
+
 </resources>
