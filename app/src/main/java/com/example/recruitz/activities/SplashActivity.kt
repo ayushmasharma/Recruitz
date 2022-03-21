@@ -23,12 +23,19 @@ class SplashActivity : BaseActivity() {
         fullScreenMode()
         customFont(tv_app_name)
 
-        // 3 SECOND DELAY BEFORE SWITCHING TO NEXT ACTIVITY
+            // 10 SECOND DELAY BEFORE SWITCHING TO NEXT ACTIVITY
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this@SplashActivity, IntroActivity::class.java))
-            finish()
-        }, 300)
+            val currentUserID = FirebaseAuthentication().getCurrentUserID()
+
+            if (currentUserID.isNotEmpty()) {
+                Firestore().loadStudentOrTPOData(this)
+            } else {
+                startActivity(Intent(this@SplashActivity, IntroActivity::class.java))
+                finish()
+            }
+        }, 1000)
     }
+
     fun signInSuccessByStudent(loggedInStudent: Student) {
         Log.i("student Main","Student Main")
         Toast.makeText(this, "${loggedInStudent.firstName} signed in successfully.", Toast.LENGTH_LONG).show()

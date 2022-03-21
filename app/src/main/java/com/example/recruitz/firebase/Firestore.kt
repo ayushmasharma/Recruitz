@@ -3,12 +3,10 @@ package com.example.recruitz.firebase
 import android.app.Activity
 import android.util.Log
 import android.widget.Toast
+import com.example.recruitz.activities.*
 import com.example.recruitz.models.College
 import com.example.recruitz.models.TPO
-import com.example.recruitz.activities.SignInActivity
-import com.example.recruitz.activities.SignUpActivity
-import com.example.recruitz.activities.SplashActivity
-import com.example.recruitz.activities.UpdateProfileActivity
+import com.example.recruitz.models.Company
 import com.example.recruitz.models.Student
 import com.example.recruitz.utils.Constants
 import com.google.firebase.firestore.FirebaseFirestore
@@ -56,12 +54,9 @@ class Firestore {
 
     fun registerTPO(activity : SignUpActivity, tpoInfo: TPO) {
         mFireStore.collection(Constants.TPO)
-            // Here the document id is the Student ID.
             .document(tpoInfo.id)
-            // Here the studentInfo are field values and the SetOption is set to merge. It is for if we want to merge
             .set(tpoInfo, SetOptions.merge())
             .addOnSuccessListener {
-                // Here call a function of base activity for transferring the result to it.
                 activity.tpoRegisteredSuccess(tpoInfo)
             }
             .addOnFailureListener { e ->
@@ -123,20 +118,20 @@ class Firestore {
             .document(FirebaseAuthentication().getCurrentUserID())
             .get()
             .addOnSuccessListener { document ->
-//                if(document != null){
-//                    val loggedInTPO : TPO = document.toObject(TPO::class.java)!!
-//                    when(activity){
-//                        is SplashActivity ->{
-//                            activity.signInSuccessByTPO(loggedInTPO)
-//                        }
-//                        is SignInActivity ->{
-//                            activity.signInSuccessByTPO(loggedInTPO)
-//                        }
-//                    }
-//                }else{
-//                    Log.i("tag","student")
-//                    loadStudentData(activity)
-//                }
+                if(document.exists()){
+                    val loggedInTPO : TPO = document.toObject(TPO::class.java)!!
+                    when(activity){
+                        is SplashActivity ->{
+                            activity.signInSuccessByTPO(loggedInTPO)
+                        }
+                        is SignInActivity ->{
+                            activity.signInSuccessByTPO(loggedInTPO)
+                        }
+                    }
+                }else{
+                    Log.i("tag","student")
+                    loadStudentData(activity)
+                }
             }
             .addOnFailureListener { e ->
                 // Here call a function of base activity for transferring the result to it.
@@ -168,6 +163,45 @@ class Firestore {
                 Log.e(
                     activity.javaClass.simpleName,
                     "Error while updating profile.",
+                    e
+                )
+            }
+    }
+    fun getCollegeCode(company : Company,tpoId:String,activity : NewCompanyDetailsActivity){
+        mFireStore.collection(Constants.TPO)
+            .document(tpoId)
+            .get()
+            .addOnSuccessListener { TPODocument->
+                val collegeCode:String = TPODocument.toObject(TPO::class.java)!!.collegeCode
+                addCompanyInCollege(company,collegeCode,activity)
+            }
+            .addOnFailureListener {e->
+                activity.hideProgressDialog()
+                Log.e(
+                    activity.javaClass.simpleName,
+                    "Error while getting college code.",
+                    e
+                )
+            }
+    }
+
+    private fun addCompanyInCollege(company: Company, collegeCode : String, activity: NewCompanyDetailsActivity){
+        var companyHashMap = HashMap<String,Company>()
+        companyHashMap[company.name]=company
+
+        mFireStore.collection(Constants.COLLEGES)
+            .document(collegeCode)
+            .collection(Constants.COMPANIES)
+            .document(company.name)
+            .set(company)
+            .addOnSuccessListener {
+                activity.companyRegisteredSuccess()
+            }
+            .addOnFailureListener {e->
+                activity.hideProgressDialog()
+                Log.e(
+                    activity.javaClass.simpleName,
+                    "Error while adding company in college.",
                     e
                 )
             }

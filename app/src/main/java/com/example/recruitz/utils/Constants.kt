@@ -6,6 +6,7 @@ object Constants {
     const val STUDENTS: String = "students"
     const val COLLEGES : String = "colleges"
     const val TPO : String = "tpo"
+    const val COMPANIES : String = "companies"
 
     // Firebase database field names
     const val ID  = "id"
@@ -19,4 +20,5 @@ object Constants {
     const val STUDENT_DETAILS : String ="studentDetails"
     const val TPO_DETAILS : String ="tpoDetails"
     const val IS_STUDENT: String = "isStudent"
+    const val COMPANIES_LIST = "companiesList"
 }

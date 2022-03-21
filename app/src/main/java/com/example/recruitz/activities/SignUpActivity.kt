@@ -66,7 +66,7 @@ class SignUpActivity : BaseActivity() {
                 tpo.collegeName = collegeName
                 tpo.email=email
 
-                val college = College()
+                val college = College(collegeName,HashMap())
                 college.collegeName=collegeName
 
                 // Show the progress dialog.
@@ -111,7 +111,7 @@ class SignUpActivity : BaseActivity() {
          */
         //adding toast
         Toast.makeText(this,
-            "${FirebaseAuthentication().getCurrentUserMailId()} has successfully registered with EZ Place!",
+            "${FirebaseAuthentication().getCurrentUserMailId()} has successfully registered with Recruitz!",
             Toast.LENGTH_LONG).show()
         startActivity(Intent(this,UpdateProfileActivity::class.java))
         // Finish the Sign-Up Screen
@@ -126,7 +126,7 @@ class SignUpActivity : BaseActivity() {
          */
         //adding toast
         Toast.makeText(this,
-            "${FirebaseAuthentication().getCurrentUserMailId()} has successfully registered with EZ Place!",
+            "${FirebaseAuthentication().getCurrentUserMailId()} has successfully registered with Recruitz!",
             Toast.LENGTH_LONG).show()
         intent = Intent(this, MainActivity::class.java)
         intent.putExtra(Constants.TPO_DETAILS, tpo)
