@@ -1,46 +1,42 @@
 package com.example.recruitz.activities
 
-import android.os.Build
+import android.os.AsyncTask
 import android.os.Bundle
-import android.provider.SyncStateContract
 import android.text.TextUtils
 import android.util.Log
-import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import com.example.recruitz.R
-import com.example.recruitz.firebase.FirebaseAuthentication
 import com.example.recruitz.firebase.Firestore
-import com.example.recruitz.models.College
 import com.example.recruitz.models.Company
-import com.example.recruitz.models.TPO
+import com.example.recruitz.models.CompanyNameAndLastRound
+import com.example.recruitz.models.Student
 import com.example.recruitz.utils.Constants
 import kotlinx.android.synthetic.main.activity_new_company_details.*
-import kotlinx.android.synthetic.main.activity_sign_up.*
-import kotlinx.android.synthetic.main.activity_update_profile.*
-import java.util.*
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.DataOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
+import java.net.URL
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-
 
 class NewCompanyDetailsActivity : BaseActivity() {
 
-    private val branches = arrayOf(
-        "Computer Science", "Electronics and Communication", "Electrical",
-        "Informaion Technology", "Mechantronics"
-    )
+    lateinit var collegeCode : String
 
-    lateinit var companiesNamesAndIds: HashMap<String, String>
-
-    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_company_details)
 
         setupActionBar(toolbar_new_company)
 
-        addBranchesListInLayout()
+        if(intent.hasExtra(Constants.COLLEGE_CODE))
+            collegeCode = intent.getStringExtra(Constants.COLLEGE_CODE)!!
+
+        addBranchesCheckboxesInLayout()
 
         btn_submit_new_company.setOnClickListener {
             // Call a function to add new company in the database.
@@ -48,25 +44,25 @@ class NewCompanyDetailsActivity : BaseActivity() {
         }
     }
 
-    private fun addBranchesListInLayout() {
+    private fun addBranchesCheckboxesInLayout() {
         val checkboxLinearLayout = ll_check_boxes
 
-        for (i in branches.indices) {
+        for (i in Constants.ALL_BRANCHES.indices) {
             val checkBox = CheckBox(this)
-            checkBox.text = branches[i]
+            checkBox.text = Constants.ALL_BRANCHES[i]
             checkboxLinearLayout.addView(checkBox)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     private fun submitNewCompanyDetails() {
         // Here we get the text from editText and trim the space
-        val companyName: String = autoCompanyNameTextView.text.toString().trim { it <= ' ' }
+        val companyName: String = et_new_company_name.text.toString().trim { it <= ' ' }
         val cgpaCutOffString: String = et_cgpa_cut_off.text.toString().trim { it <= ' ' }
         val ctcDetails = et_ctc_details.text.toString().trim { it <= ' ' }
+        val jobProfile = et_job_profile.text.toString().trim { it <= ' '}
         val companyLocation: String = et_location_new_company.text.toString().trim { it <= ' ' }
         val deadlineToApply: String = et_deadline_to_apply.text.toString().trim { it <= ' ' }
-        val backLogsAllowed: Boolean = rb_backlogs_allowed.isSelected
+        val backLogsAllowed: Int = if (rb_backlogs_allowed.isSelected) 1 else 0
 
         var branchesAllowed: ArrayList<String> = ArrayList<String>()
 
@@ -83,6 +79,7 @@ class NewCompanyDetailsActivity : BaseActivity() {
                 cgpaCutOffString,
                 branchesAllowed,
                 ctcDetails,
+                jobProfile,
                 companyLocation,
                 deadlineToApply
             )
@@ -90,24 +87,51 @@ class NewCompanyDetailsActivity : BaseActivity() {
             val cgpaCutOff = cgpaCutOffString.toDouble()
             var company = Company(
                 companyName, cgpaCutOff,
-                backLogsAllowed, branchesAllowed, ctcDetails, companyLocation, deadlineToApply
-            )
+                backLogsAllowed, branchesAllowed, ctcDetails,jobProfile,
+                companyLocation, deadlineToApply,ArrayList(),0)
+            Log.i("tag2",collegeCode)
             registerCompanyInCollegeDatabase(company)
         }
     }
 
     private fun registerCompanyInCollegeDatabase(company: Company) {
         showProgressDialog(resources.getString(R.string.please_wait))
-        var tpoId : String= FirebaseAuthentication().getCurrentUserID()
-
-        //First we retrieve collegeCode from tpoId and from that function ,we'll call addCompanyInCollege()
-        Firestore().getCollegeCode(company,tpoId,this)
+        Firestore().addCompanyInCollege(company,collegeCode,this)
     }
 
-    fun companyRegisteredSuccess(){
+    fun companyRegisteredSuccess(company : Company) {
         hideProgressDialog()
-        Toast.makeText(this, getString(R.string.company_is_added),
-            Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            this, getString(R.string.company_is_added),
+            Toast.LENGTH_LONG
+        ).show()
+
+        // Get eligible students list according to company constraints
+        Firestore().getEligibleStudents(company,collegeCode,this)
+    }
+
+    fun getEligibleStudentsSuccess(eligibleStudents : ArrayList<Student>, companyName : String){
+        hideProgressDialog()
+        var eligibleStudentsIds :ArrayList<String> = ArrayList()
+        Log.i("stu2",eligibleStudents.size.toString())
+
+        //Notify all these eligible students regarding new company
+        // This will be done in background using Async tasks
+        for(student in eligibleStudents){
+            val token=student.fcmToken
+            val id=student.id
+            eligibleStudentsIds.add(id)
+            Log.i("stu",student.firstName)
+            SendNotificationToEligibleStudentsAsyncTask(companyName, token).execute()
+        }
+        showProgressDialog(getString(R.string.please_wait))
+        val companyLastRoundObject = CompanyNameAndLastRound(companyName,1)
+        Firestore().updateCompanyInStudentDatabase(eligibleStudentsIds, companyLastRoundObject,this)
+    }
+
+    fun updateCompanyInStudentDatabaseSuccess(){
+        Log.i("update","here")
+        hideProgressDialog()
         finish()
     }
 
@@ -120,6 +144,7 @@ class NewCompanyDetailsActivity : BaseActivity() {
         cgpaCutOff: String,
         branchesAllowed: ArrayList<String>,
         ctcDetails: String,
+        jobProfile: String,
         companyLocation: String,
         deadlineToApply: String
     ): Boolean {
@@ -144,6 +169,10 @@ class NewCompanyDetailsActivity : BaseActivity() {
                 showErrorSnackBar(getString(R.string.enter_ctc_details))
                 false
             }
+            TextUtils.isEmpty(jobProfile) -> {
+                showErrorSnackBar(getString(R.string.enter_job_profile))
+                false
+            }
             TextUtils.isEmpty(companyLocation) -> {
                 showErrorSnackBar(getString(R.string.enter_company_location))
                 false
@@ -156,5 +185,163 @@ class NewCompanyDetailsActivity : BaseActivity() {
                 true
             }
         }
+    }
+
+    private inner class SendNotificationToEligibleStudentsAsyncTask(val companyName: String, val token : String) :
+        AsyncTask<Any, Void, String>() {
+
+        override fun doInBackground(vararg p0: Any?): String {
+            var result: String
+
+            /** REFERENCE
+             * https://developer.android.com/reference/java/net/HttpURLConnection
+             *
+             */
+            var connection: HttpURLConnection? = null
+            try {
+                val url = URL(Constants.FCM_BASE_URL) // Base Url
+                connection = url.openConnection() as HttpURLConnection
+
+                /**
+                 * A URL connection can be used for input and/or output.  Set the DoOutput
+                 * flag to true if you intend to use the URL connection for output,
+                 * false if not.  The default is false.
+                 */
+                connection.doOutput = true
+                connection.doInput = true
+
+                /**
+                 * Sets whether HTTP redirects should be automatically followed by this instance.
+                 * The default value comes from followRedirects, which defaults to true.
+                 */
+                connection.instanceFollowRedirects = false
+
+                /**
+                 * Set the method for the URL request, one of:
+                 *  POST
+                 */
+                connection.requestMethod = Constants.POST
+
+                /**
+                 * Sets the general request property. If a property with the key already
+                 * exists, overwrite its value with the new value.
+                 */
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("charset", "utf-8")
+                connection.setRequestProperty("Accept", "application/json")
+
+                // The Server key can be found in
+                // firebase console -> General settings -> cloud messaging ->Server key
+                connection.setRequestProperty(
+                    Constants.FCM_AUTHORIZATION, "${Constants.FCM_KEY}=${Constants.FCM_SERVER_KEY}"
+                )
+
+                /**
+                 * Some protocols do caching of documents.  Occasionally, it is important
+                 * to be able to "tunnel through" and ignore the caches (e.g., the
+                 * "reload" button in a browser).  If the UseCaches flag on a connection
+                 * is true, the connection is allowed to use whatever caches it can.
+                 *  If false, caches are to be ignored.
+                 *  The default value comes from DefaultUseCaches, which defaults to
+                 * true.
+                 */
+                connection.useCaches = false
+
+                /**
+                 * Creates a new data output stream to write data to the specified
+                 * underlying output stream. The counter written is set to zero.
+                 */
+                val dataOutputStream = DataOutputStream(connection.outputStream)
+
+                // CREATING NOTIFICATION DATA PAYLOAD
+                // START
+                // Create JSONObject Request
+                val jsonRequest = JSONObject()
+
+                // Create a data object
+                val dataObject = JSONObject()
+                // pass the title as per requirement
+                dataObject.put(Constants.FCM_KEY_TITLE, "$companyName hiring")
+                // Here you can pass the message as per requirement
+                dataObject.put(
+                    Constants.FCM_KEY_MESSAGE,
+                    getString(R.string.tap_to_view_more)
+                )
+
+                // Here add the data object and the user's token in the jsonRequest object.
+                jsonRequest.put(Constants.FCM_KEY_DATA, dataObject)
+                jsonRequest.put(Constants.FCM_KEY_TO, token)
+                // END
+
+                /**
+                 * Writes out the string to the underlying output stream as a
+                 * sequence of bytes. Each character in the string is written out, in
+                 * sequence, by discarding its high eight bits. If no exception is
+                 * thrown, the counter written is incremented by the
+                 * length of s.
+                 */
+                dataOutputStream.writeBytes(jsonRequest.toString())
+                dataOutputStream.flush() // Flushes this data output stream.
+                dataOutputStream.close() // Closes this output stream and releases any system resources associated with the stream
+
+                val httpResult: Int =
+                    connection.responseCode // Gets the status code from an HTTP response message.
+
+                if (httpResult == HttpURLConnection.HTTP_OK) {
+
+                    /**
+                     * Returns an input stream that reads from this open connection.
+                     */
+                    val inputStream = connection.inputStream
+
+                    /**
+                     * Creates a buffering character-input stream that uses a default-sized input buffer.
+                     */
+                    val reader = BufferedReader(InputStreamReader(inputStream))
+                    val stringBuilder = StringBuilder()
+                    var line: String?
+                    try {
+                        /**
+                         * Reads a line of text.  A line is considered to be terminated by any one
+                         * of a line feed ('\n'), a carriage return ('\r'), or a carriage return
+                         * followed immediately by a linefeed.
+                         */
+                        while (reader.readLine().also { line = it } != null) {
+                            stringBuilder.append(line + "\n")
+                        }
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    } finally {
+                        try {
+                            /**
+                             * Closes this input stream and releases any system resources associated
+                             * with the stream.
+                             */
+                            inputStream.close()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                    }
+                    result = stringBuilder.toString()
+                } else {
+                    /**
+                     * Gets the HTTP response message, if any, returned along with the
+                     * response code from a server.
+                     */
+                    result = connection.responseMessage
+                }
+
+            } catch (e: SocketTimeoutException) {
+                result = "Connection Timeout"
+            } catch (e: Exception) {
+                result = "Error : " + e.message
+            } finally {
+                connection?.disconnect()
+            }
+
+            // You can notify with your result to onPostExecute.
+            return result
+        }
+
     }
 }

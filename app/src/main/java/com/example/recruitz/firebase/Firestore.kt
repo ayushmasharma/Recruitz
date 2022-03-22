@@ -4,21 +4,20 @@ import android.app.Activity
 import android.util.Log
 import android.widget.Toast
 import com.example.recruitz.activities.*
-import com.example.recruitz.models.College
-import com.example.recruitz.models.TPO
-import com.example.recruitz.models.Company
-import com.example.recruitz.models.Student
+import com.example.recruitz.models.*
 import com.example.recruitz.utils.Constants
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 class Firestore {
     private val mFireStore = FirebaseFirestore.getInstance()
 
-    fun registerStudent(activity : SignUpActivity, studentInfo: Student) {
+    fun registerStudent(activity: SignUpActivity, studentInfo: Student) {
+        val id=studentInfo.id
         mFireStore.collection(Constants.STUDENTS)
             // Here the document id is the Student ID.
-            .document(studentInfo.id)
+            .document(id)
             // Here the studentInfo are field values and the SetOption is set to merge. It is for if we want to merge
             .set(studentInfo, SetOptions.merge())
             .addOnSuccessListener {
@@ -35,7 +34,7 @@ class Firestore {
             }
     }
 
-    fun registerCollege(college : College, tpo: TPO, password: String, activity: SignUpActivity){
+    fun registerCollege(college: College, tpo: TPO, password: String, activity: SignUpActivity) {
         mFireStore.collection((Constants.COLLEGES))
             .add(college)
             .addOnSuccessListener {document ->
@@ -92,6 +91,10 @@ class Firestore {
                     is UpdateProfileActivity -> {
                         activity.setStudentDataInUI(loggedInUser)
                     }
+                    is MainActivity ->{
+                        Log.i("yes","yes")
+                        activity.loadStudentDataSuccess(loggedInUser)
+                    }
                 }
             }
             .addOnFailureListener { e ->
@@ -101,6 +104,9 @@ class Firestore {
                         activity.hideProgressDialog()
                     }
                     is UpdateProfileActivity -> {
+                        activity.hideProgressDialog()
+                    }
+                    is MainActivity -> {
                         activity.hideProgressDialog()
                     }
                 }
@@ -147,19 +153,33 @@ class Firestore {
             }
     }
 
-    fun updateUserProfileData(activity: UpdateProfileActivity, userHashMap: HashMap<String, Any>) {
+    fun updateStudentProfileData(activity: Activity, studentHashMap: HashMap<String, Any>) {
         mFireStore.collection(Constants.STUDENTS) // Collection Name
             .document(FirebaseAuthentication().getCurrentUserID()) // Document ID
-            .update(userHashMap) // A hashmap of fields which are to be updated.
+            .update(studentHashMap) // A hashmap of fields which are to be updated.
             .addOnSuccessListener {
                 // Profile data is updated successfully.
                 Log.i(activity.javaClass.simpleName, "Profile Data updated successfully!")
                 Toast.makeText(activity, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
                 // Notify the success result.
-                activity.profileUpdateSuccess()
+                when(activity){
+                    is UpdateProfileActivity ->{
+                        activity.profileUpdateSuccess()
+                    }
+                    is MainActivity ->{
+                        activity.tokenUpdateSuccess()
+                    }
+                }
             }
             .addOnFailureListener { e ->
-                activity.hideProgressDialog()
+                when(activity){
+                    is UpdateProfileActivity ->{
+                        activity.hideProgressDialog()
+                    }
+                    is MainActivity ->{
+                        activity.hideProgressDialog()
+                    }
+                }
                 Log.e(
                     activity.javaClass.simpleName,
                     "Error while updating profile.",
@@ -167,27 +187,14 @@ class Firestore {
                 )
             }
     }
-    fun getCollegeCode(company : Company,tpoId:String,activity : NewCompanyDetailsActivity){
-        mFireStore.collection(Constants.TPO)
-            .document(tpoId)
-            .get()
-            .addOnSuccessListener { TPODocument->
-                val collegeCode:String = TPODocument.toObject(TPO::class.java)!!.collegeCode
-                addCompanyInCollege(company,collegeCode,activity)
-            }
-            .addOnFailureListener {e->
-                activity.hideProgressDialog()
-                Log.e(
-                    activity.javaClass.simpleName,
-                    "Error while getting college code.",
-                    e
-                )
-            }
-    }
 
-    private fun addCompanyInCollege(company: Company, collegeCode : String, activity: NewCompanyDetailsActivity){
-        var companyHashMap = HashMap<String,Company>()
-        companyHashMap[company.name]=company
+    fun addCompanyInCollege(
+        company: Company,
+        collegeCode: String,
+        activity: NewCompanyDetailsActivity
+    ) {
+        var companyHashMap = HashMap<String, Company>()
+        companyHashMap[company.name] = company
 
         mFireStore.collection(Constants.COLLEGES)
             .document(collegeCode)
@@ -195,13 +202,147 @@ class Firestore {
             .document(company.name)
             .set(company)
             .addOnSuccessListener {
-                activity.companyRegisteredSuccess()
+                activity.companyRegisteredSuccess(company)
             }
             .addOnFailureListener {e->
                 activity.hideProgressDialog()
                 Log.e(
                     activity.javaClass.simpleName,
                     "Error while adding company in college.",
+                    e
+                )
+            }
+    }
+
+    fun getEligibleStudents(
+        company: Company,
+        collegeCode: String,
+        activity: NewCompanyDetailsActivity
+    ) {
+        Log.i("stu3",collegeCode)
+        if(company.backLogsAllowed == 0) {
+            mFireStore.collection(Constants.STUDENTS)
+                .whereEqualTo(Constants.COLLEGE_CODE, collegeCode)
+                .whereIn(
+                    Constants.BRANCH,
+                    company.branchesAllowed
+                )
+                .whereGreaterThanOrEqualTo(Constants.CGPA, company.cgpaCutOff)
+                .whereEqualTo(Constants.NUMBER_OF_BACKLOGS, company.backLogsAllowed)
+                .whereEqualTo(Constants.PLACED_ABOVE_THRESHOLD, 0)
+                .get()
+                .addOnSuccessListener { studentDocuments ->
+                    var eligibleStudents: ArrayList<Student> = ArrayList()
+                    for (student in studentDocuments) {
+                        // Convert all the document snapshot to the Student object using the data model class.
+                        val studentObject = student.toObject(Student::class.java)!!
+                        eligibleStudents.add(studentObject)
+                    }
+                    activity.getEligibleStudentsSuccess(
+                        eligibleStudents,
+                        company.name
+                    )
+                }
+                .addOnFailureListener { e ->
+                    activity.hideProgressDialog()
+                    Log.e(
+                        activity.javaClass.simpleName,
+                        "Error while fetching eligible students.",
+                        e
+                    )
+                }
+        }
+        else{
+            mFireStore.collection(Constants.STUDENTS)
+                .whereEqualTo(Constants.COLLEGE_CODE, collegeCode)
+                .whereIn(
+                    Constants.BRANCH,
+                    company.branchesAllowed
+                )
+                .whereGreaterThanOrEqualTo(Constants.CGPA, company.cgpaCutOff)
+                .whereEqualTo(Constants.PLACED_ABOVE_THRESHOLD, 0)
+                .get()
+                .addOnSuccessListener { studentDocuments ->
+                    var eligibleStudents: ArrayList<Student> = ArrayList()
+                    for (student in studentDocuments) {
+                        // Convert all the document snapshot to the Student object using the data model class.
+                        val studentObject = student.toObject(Student::class.java)!!
+                        eligibleStudents.add(studentObject)
+                    }
+                    activity.getEligibleStudentsSuccess(
+                        eligibleStudents,
+                        company.name
+                    )
+                }
+                .addOnFailureListener { e ->
+                    activity.hideProgressDialog()
+                    Log.e(
+                        activity.javaClass.simpleName,
+                        "Error while fetching eligible students.",
+                        e
+                    )
+                }
+        }
+    }
+
+    fun updateCompanyInStudentDatabase(
+        studentsList: ArrayList<String>,
+        companyLastRoundObject : CompanyNameAndLastRound,
+        activity: NewCompanyDetailsActivity
+    ) {
+        for(id in studentsList){
+            mFireStore.collection(Constants.STUDENTS)
+                .document(id)
+                .update(Constants.COMPANY_NAME_AND_LAST_ROUND, FieldValue.arrayUnion(companyLastRoundObject))
+                .addOnCompleteListener { task->
+                    if(task.isSuccessful){
+                        companyLastRoundObject.lastRound -= 1
+                        mFireStore.collection(Constants.STUDENTS)
+                            .document(id)
+                            .update(Constants.COMPANY_NAME_AND_LAST_ROUND,FieldValue.arrayRemove(companyLastRoundObject))
+                            .addOnFailureListener { e->
+                                Log.e(
+                                    activity.javaClass.simpleName,
+                                    "Error while updating company in student database.",
+                                    e
+                                )
+                            }
+                    }
+                }
+                .addOnFailureListener { e->
+                    Log.e(
+                        activity.javaClass.simpleName,
+                        "Error while updating company in student database.",
+                        e
+                    )
+                }
+        }
+        activity.updateCompanyInStudentDatabaseSuccess()
+    }
+
+    fun getCompaniesListFromDatabase(companyNames : ArrayList<String>,collegeCode : String,activity: MainActivity){
+        if(companyNames.size==0){
+            activity.populateRecyclerView(ArrayList())
+            return
+        }
+        mFireStore.collection(Constants.COLLEGES)
+            .document(collegeCode)
+            .collection(Constants.COMPANIES)
+            .whereIn(Constants.NAME,companyNames)
+            .get()
+            .addOnSuccessListener { companyDocuments ->
+                val companyObjects : ArrayList<Company> = ArrayList()
+                for(companyDocument in companyDocuments){
+                    val companyObject = companyDocument.toObject(Company :: class.java)
+                    companyObjects.add(companyObject)
+                }
+                activity.populateRecyclerView(companyObjects)
+            }
+            .addOnFailureListener { e ->
+                activity.hideProgressDialog()
+                Log.e(
+                    activity.javaClass.simpleName,
+                    "Error while fetching companies from database.",
                     e
                 )
             }

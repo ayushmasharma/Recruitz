@@ -4,7 +4,8 @@
     <!-- IntroActivity-->
     <string name="lets_get_started_text">Get Started</string>
     <string name="intro_text_description">Recruitment Portal for Banasthali University</string>
-    <string name="sign_in">Already have an account ?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="already_have_an_account">Already have an account ?</string>
     <string name="sign_up_as_student">SIGN UP AS STUDENT</string>
     <string name="sign_up_as_tpo">SIGN UP AS TPO</string>
 
@@ -24,22 +25,25 @@
     <!-- Progress Dialog-->
     <string name="please_wait">Please Wait&#8230;</string>
 
-    <string name="college_name">College Name</string>
-    <string name="college_roll_number">College Roll Number</string>
-    <string name="branch">Branch Code</string>
-    <string name="cgpa">CGPA</string>
-
     <!-- SignInActivity -->
     <string name="sign_in_description_text">Enter your email id and password to sign in.</string>
 
+    <!-- Update profile activity -->
     <string name="update_profile">Update Profile</string>
     <string name="update">UPDATE</string>
+    <string name="college_name">College Name</string>
+    <string name="college_roll_number">College Roll Number</string>
+    <string name="college_code">College Code</string>
+    <string name="branch">Branch Code</string>
+    <string name="cgpa">CGPA</string>
+    <string name="select_branch">Select branch</string>
 
     <!-- MainActivity -->
     <string name="upcoming">Upcoming</string>
     <string name="ongoing">Ongoing</string>
     <string name="previous">Previous</string>
     <string name="main_activity_title">Companies</string>
+    <string name="no_companies_available">No companies under this section.</string>
 
     <string name="nav_my_profile">My Profile</string>
     <string name="nav_sign_out">Sign Out</string>
@@ -56,6 +60,7 @@
     <string name="cgpa_cut_off">CGPA Cut Off</string>
     <string name="branches_allowed">Branches Allowed</string>
     <string name="ctc_details">CTC Details</string>
+    <string name="job_profile">Job profile</string>
     <string name="location">Location</string>
     <string name="deadline_to_apply">Deadline to apply</string>
     <string name="submit">Submit</string>
@@ -63,9 +68,7 @@
     <string name="computer_science">Computer Science</string>
     <string name="electronics_and_communication">Electronics and Communication</string>
     <string name="electrical">Electrical</string>
-    <string name="instrumentation_and_control">Instrumentation and Control</string>
     <string name="mechanical">Mechanical</string>
-    <string name="textile">Textile</string>
     <string name="add_new_company">Add new company</string>
     <string name="enter_company_name">Please enter the company name</string>
     <string name="enter_cgpa_cut_off">Please enter CGPA Cut off</string>
@@ -73,10 +76,19 @@
     <string name="enter_company_location">Please enter company location</string>
     <string name="enter_deadline_to_apply">Please enter deadline to apply</string>
     <string name="enter_backlogs_details">Please enter backlogs details</string>
-    <string name="enter_ctc_details">Enter CTC details</string>
-    <string name="backlogs">Backlogs</string>
+    <string name="enter_ctc_details">Please enter CTC details</string>
+    <string name="enter_job_profile">Please enter job profiles.</string>    <string name="backlogs">Backlogs</string>
     <string name="allowed">Allowed</string>
     <string name="not_allowed">Not allowed</string>
     <string name="company_is_added">Company added successfully</string>
+    <string name="default_notification_channel_id">Recruitz notification channel Id</string>
+
+    <string name="tap_to_view_more">Tap to view more</string>
+    <string name="enter_your_college_code">Please enter your college code.</string>
+    <string name="select_you_branch">Please select your branch.</string>
+    <string name="enter_cgpa">Please enter your cgpa.</string>
+    <string name="enter_roll_number">Please enter your roll number.</string>
+    <string name="number_of_backlogs">Number of backlogs</string>
+    <string name="enter_backlogs">Please enter number of backlogs till date.</string>
 
 </resources>

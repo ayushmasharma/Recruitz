@@ -26,6 +26,7 @@ class FirebaseAuthentication() {
                     val registeredEmail = firebaseUser.email!!
                     student.id = firebaseUser.uid
                     // call the registerUser function of FirestoreClass to make an entry in the database.
+                    Log.i("stu8",student.toString())
                     Firestore().registerStudent(activity, student)
 
                 } else {
@@ -72,7 +73,7 @@ class FirebaseAuthentication() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Firestore().loadStudentData(activity)
+                    Firestore().loadStudentOrTPOData(activity)
                 } else {
                     Toast.makeText(
                         activity,

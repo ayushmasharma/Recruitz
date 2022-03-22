@@ -86,6 +86,8 @@ open class BaseActivity : AppCompatActivity() {
                         if (FirebaseAuthentication().getCurrentUserID().isNotEmpty())
                             FirebaseAuthentication().signOut()
 
+                        activity.clearSharedPreferences()
+
                         val intent = Intent(activity, IntroActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                         startActivity(intent)
