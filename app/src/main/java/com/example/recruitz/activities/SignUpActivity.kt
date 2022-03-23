@@ -21,10 +21,12 @@ class SignUpActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
 
+        /** Initialize "isStudent" */
         var extras : Bundle? = intent.extras
 
         isStudent = extras!!.getBoolean(Constants.IS_STUDENT)
 
+        /** disables collegeName text view for student in layout */
         if(isStudent) til_college_name_sign_up.visibility= View.GONE
         else til_college_name_sign_up.visibility= View.VISIBLE
 
@@ -36,10 +38,7 @@ class SignUpActivity : BaseActivity() {
         }
     }
 
-    /**
-     * A function to register a user to our app using the Firebase.
-     * For more details visit: https://firebase.google.com/docs/auth/android/custom-auth
-     */
+    /** A function to register a user to the app using the Firebase. **/
     private fun registerUser() {
         // Here we get the text from editText and trim the space
         val firstName: String = et_first_name_sign_up.text.toString().trim { it <= ' ' }
@@ -75,9 +74,7 @@ class SignUpActivity : BaseActivity() {
         }
     }
 
-    /**
-     * A function to validate the entries of a new user.
-     */
+    /** A function to validate the entries of a new user. **/
     private fun validateForm(firstName: String,email: String, password: String): Boolean {
         return when {
             TextUtils.isEmpty(firstName) -> {
@@ -102,37 +99,33 @@ class SignUpActivity : BaseActivity() {
      * A function to be called the user is registered successfully and entry is made in the firestore database.
      */
     fun studentRegisteredSuccess() {
-        // Hide the progress dialog
         hideProgressDialog()
-        /**
-         * Here the new user registered is automatically signed-in so we just sign-out the user from firebase
-         * and send him to Intro Screen for Sign-In
-         */
-        //adding toast
         Toast.makeText(this,
             "${FirebaseAuthentication().getCurrentUserMailId()} has successfully registered with Recruitz!",
             Toast.LENGTH_LONG).show()
+
+        /** Sends the student to Update Profile activity after sign-up */
         val intent = Intent(this,UpdateProfileActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)        // Finish the Sign-Up Screen
+        startActivity(intent)
         finish()
     }
 
+    /**
+     * A function to be called after the TPO is registered successfully
+     * and entry is made in the firestore database.
+     */
     fun tpoRegisteredSuccess(tpo : TPO){
-        // Hide the progress dialog
         hideProgressDialog()
-        /**
-         * Here the new user registered is automatically signed-in
-         */
-        //adding toast
         Toast.makeText(this,
             "${FirebaseAuthentication().getCurrentUserMailId()} has successfully registered with Recruitz!",
             Toast.LENGTH_LONG).show()
+
+        /** TPO is sent to Main activity after sign-up */
         intent = Intent(this, MainActivity::class.java)
         intent.putExtra(Constants.TPO_DETAILS, tpo)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
-        // Finish the Sign-Up Screen
         this.finish()
     }
 }

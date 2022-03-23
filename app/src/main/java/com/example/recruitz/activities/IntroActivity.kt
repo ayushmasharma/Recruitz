@@ -28,9 +28,10 @@ class IntroActivity : BaseActivity() {
             startActivity(Intent(this@IntroActivity, SignInActivity::class.java))
         }
     }
-    fun introToSignUpIntent(value : Boolean){
+    private fun introToSignUpIntent(isStudent: Boolean) {
         intent = Intent(this, SignUpActivity::class.java)
-        intent.putExtra(Constants.IS_STUDENT, value)
+        // Passing the boolean variable "isStudent" to next activity
+        intent.putExtra(Constants.IS_STUDENT, isStudent)
         startActivity(intent)
     }
 }

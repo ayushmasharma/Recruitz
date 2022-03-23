@@ -33,6 +33,7 @@ class NewCompanyDetailsActivity : BaseActivity() {
 
         setupActionBar(toolbar_new_company)
 
+        /** Initialize college Code passed from previous activity i.e. Main activity */
         if(intent.hasExtra(Constants.COLLEGE_CODE))
             collegeCode = intent.getStringExtra(Constants.COLLEGE_CODE)!!
 
@@ -44,6 +45,7 @@ class NewCompanyDetailsActivity : BaseActivity() {
         }
     }
 
+    /** Shows the list of branches in the layout */
     private fun addBranchesCheckboxesInLayout() {
         val checkboxLinearLayout = ll_check_boxes
 
@@ -87,16 +89,15 @@ class NewCompanyDetailsActivity : BaseActivity() {
             val cgpaCutOff = cgpaCutOffString.toDouble()
             var company = Company(
                 companyName, cgpaCutOff,
-                backLogsAllowed, branchesAllowed, ctcDetails,jobProfile,
-                companyLocation, deadlineToApply,ArrayList(),0)
-            Log.i("tag2",collegeCode)
-            registerCompanyInCollegeDatabase(company)
-        }
-    }
+                backLogsAllowed, branchesAllowed, ctcDetails,
+                companyLocation, deadlineToApply, jobProfile,
+                ArrayList(), 0
+            )
 
-    private fun registerCompanyInCollegeDatabase(company: Company) {
-        showProgressDialog(resources.getString(R.string.please_wait))
-        Firestore().addCompanyInCollege(company,collegeCode,this)
+            /** Update company details in database */
+            showProgressDialog(resources.getString(R.string.please_wait))
+            Firestore().addCompanyInCollege(company, collegeCode, this)
+        }
     }
 
     fun companyRegisteredSuccess(company : Company) {
@@ -110,10 +111,10 @@ class NewCompanyDetailsActivity : BaseActivity() {
         Firestore().getEligibleStudents(company,collegeCode,this)
     }
 
+    /** Successfully fetched list of eligible students according to company constraints */
     fun getEligibleStudentsSuccess(eligibleStudents : ArrayList<Student>, companyName : String){
         hideProgressDialog()
         var eligibleStudentsIds :ArrayList<String> = ArrayList()
-        Log.i("stu2",eligibleStudents.size.toString())
 
         //Notify all these eligible students regarding new company
         // This will be done in background using Async tasks
@@ -121,24 +122,21 @@ class NewCompanyDetailsActivity : BaseActivity() {
             val token=student.fcmToken
             val id=student.id
             eligibleStudentsIds.add(id)
-            Log.i("stu",student.firstName)
             SendNotificationToEligibleStudentsAsyncTask(companyName, token).execute()
         }
+
+        /** Update the eligible student's database */
         showProgressDialog(getString(R.string.please_wait))
         val companyLastRoundObject = CompanyNameAndLastRound(companyName,1)
         Firestore().updateCompanyInStudentDatabase(eligibleStudentsIds, companyLastRoundObject,this)
     }
 
     fun updateCompanyInStudentDatabaseSuccess(){
-        Log.i("update","here")
         hideProgressDialog()
         finish()
     }
 
-    /**
-     * A function to validate the details of a new company.
-     */
-
+    // A function to validate the details of a new company.
     private fun validateForm(
         companyName: String,
         cgpaCutOff: String,
@@ -187,6 +185,7 @@ class NewCompanyDetailsActivity : BaseActivity() {
         }
     }
 
+    /** Async Task to send notification to eligible students */
     private inner class SendNotificationToEligibleStudentsAsyncTask(val companyName: String, val token : String) :
         AsyncTask<Any, Void, String>() {
 

@@ -27,6 +27,7 @@ class SplashActivity : BaseActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val currentUserID = FirebaseAuthentication().getCurrentUserID()
 
+            /** Auto Sign-in feature */
             if (currentUserID.isNotEmpty()) {
                 Firestore().loadStudentOrTPOData(this)
             } else {
@@ -36,9 +37,11 @@ class SplashActivity : BaseActivity() {
         }, 1000)
     }
 
+    /** Student is auto signed-in successfully */
     fun signInSuccessByStudent(loggedInStudent: Student) {
-        Log.i("student Main","Student Main")
         Toast.makeText(this, "${loggedInStudent.firstName} signed in successfully.", Toast.LENGTH_LONG).show()
+
+        /** If the student's profile is empty, then send to Update profile activity, otherwise to Main activity*/
         if(loggedInStudent.branch.isEmpty())
             startActivity(Intent(this, UpdateProfileActivity::class.java))
         else{
@@ -49,8 +52,11 @@ class SplashActivity : BaseActivity() {
         this.finish()
     }
 
+    /** TPO is auto signed-in successfully */
     fun signInSuccessByTPO(loggedInTPO: TPO) {
         Toast.makeText(this, "${loggedInTPO.email} signed in successfully.", Toast.LENGTH_SHORT).show()
+
+        /** Send TPO to Main activity */
         intent = Intent(this, MainActivity::class.java)
         intent.putExtra(Constants.TPO_DETAILS, loggedInTPO)
         startActivity(intent)

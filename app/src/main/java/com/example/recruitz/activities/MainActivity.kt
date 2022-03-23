@@ -26,59 +26,95 @@ import kotlinx.android.synthetic.main.content_main.*
 
 class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private var isFABOpen = false
-    private var isStudent = true
+    /** Stores if the Floating Action Button is open or closed */
+    private var isFABOpen: Boolean = false
 
-    private lateinit var mTPO: TPO
+    /** Stores if the user is student or TPO */
+    private var isStudent: Boolean = true
+
+    /**A variable to store details of current student*/
     private lateinit var mStudent: Student
+
+    /** A SharedPreference object points to a file containing key-value pairs */
+    /** Here it is used to store Firebase Cloud Messaging Token in the device */
     private lateinit var mSharedPreferences: SharedPreferences
-    private lateinit var collegeCode : String
-    private var companyLastRoundHashMap : HashMap<String,Int> = HashMap()
+
+    /**The college code to which the student or tpo belongs*/
+    private lateinit var collegeCode: String
+
+    /** A hashmap to store the last round till
+    which the student has made progress for each company*/
+    private var companyLastRoundHashMap: HashMap<String, Int> = HashMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setupActionBar(toolbar_main_activity)
-        toolbar_main_activity.setNavigationIcon(R.drawable.ic_action_navigation_menu)
-
-        Log.i("main","oncreate")
         handleIntent(intent)
 
-        rb_ongoing.setOnClickListener {
-            tv_no_companies_available.text = "Ongoing"
-        }
-        rb_previous.setOnClickListener {
-            tv_no_companies_available.text = "Previous"
-        }
-        rb_upcoming.setOnClickListener {
-            tv_no_companies_available.text = "Upcoming"
+        /** Set OnClick listeners for bottom navigation view options */
+        bottomNavigationView.setOnNavigationItemSelectedListener {
+            /**Create array of company names to fetch data from database*/
+            var companiesList: ArrayList<String> = ArrayList()
+            if(isStudent){
+                for ((companyName, lastRound) in mStudent.companiesListAndLastRound) {
+                    companyLastRoundHashMap[companyName] = lastRound
+                    companiesList.add(companyName)
+                }
+            }
+            when(it.itemId){
+                /** Shows list of Ongoing companies */
+                R.id.bn_ongoing -> {
+                    showProgressDialog(getString(R.string.please_wait))
+                    if (isStudent) {
+                        Firestore().getSpecificCompaniesDetailsFromDatabase(
+                            companyNames = companiesList,
+                            collegeCode = collegeCode, roundsOver = 0, this@MainActivity
+                        )
+                    } else {
+                        Firestore().getAllCompaniesDetailsFromDatabase(
+                            collegeCode = collegeCode,
+                            roundsOver = 0,
+                            this@MainActivity
+                        )
+                    }
+                }
+
+                /** Shows list of previous companies whose process is over */
+                R.id.bn_previous -> {
+                    showProgressDialog(getString(R.string.please_wait))
+                    if (isStudent) {
+                        Firestore().getSpecificCompaniesDetailsFromDatabase(
+                            companyNames = companiesList,
+                            collegeCode = collegeCode, roundsOver = 1, this@MainActivity
+                        )
+                    } else {
+                        Firestore().getAllCompaniesDetailsFromDatabase(
+                            collegeCode = collegeCode,
+                            roundsOver = 1,
+                            this@MainActivity
+                        )
+                    }
+                }
+            }
+            true
         }
     }
 
-    private fun showFABMenu() {
-        isFABOpen = true
-
-        tv_block_view.visibility = View.VISIBLE
-
-        fab.setImageResource(R.drawable.ic_wrong)
-        fab.scaleType = ImageView.ScaleType.FIT_XY
-
-        ll_add_new_company.animate().translationY(-resources.getDimension(R.dimen.standard_55))
-
-        tv_add_new_company.visibility= View.VISIBLE
+    override fun onNewIntent(intent: Intent) {
+        setIntent(intent)
+        handleIntent(intent)
+        super.onNewIntent(intent)
     }
 
-    private fun closeFABMenu() {
-        isFABOpen = false
-
-        tv_block_view.visibility = View.GONE
-
-        fab.setImageResource(R.drawable.ic_fab)
-        fab.scaleType = ImageView.ScaleType.FIT_XY
-
-        ll_add_new_company.animate().translationY(0F)
-        tv_add_new_company.visibility= View.GONE
-
+    private fun setUpNavigationView() {
+        setSupportActionBar(toolbar_main_activity)
+        /** 3 white lines Icon in the upper left corner for opening drawer layout */
+        toolbar_main_activity.setNavigationIcon(R.drawable.ic_action_navigation_menu)
+        toolbar_main_activity.setNavigationOnClickListener {
+            toggleDrawer()
+        }
+        /**Assign the NavigationView.OnNavigationItemSelectedListener to navigation view.*/
+        nav_view.setNavigationItemSelectedListener(this)
     }
 
     private fun toggleDrawer() {
@@ -90,12 +126,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        Log.i("main","onnew")
-        setIntent(intent)
-        handleIntent(intent)
-        super.onNewIntent(intent)
-    }
+    /** Depending on the user is student or tpo, this function will load the screen*/
 
     private fun handleIntent(intent: Intent) {
         when {
@@ -104,43 +135,26 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 mStudent = intent.getParcelableExtra<Student>(Constants.STUDENT_DETAILS)!!
                 collegeCode = mStudent.collegeCode
                 setForStudent()
-
-                // Create array of companyNames to fetch data from database
-                var companiesList : ArrayList<String> = ArrayList()
-
-                for((companyName,lastRound) in mStudent.companiesListAndLastRound){
-                    companyLastRoundHashMap[companyName]=lastRound
-                    companiesList.add(companyName)
-                }
-                showProgressDialog(getString(R.string.please_wait))
-                Firestore().getCompaniesListFromDatabase(companiesList,collegeCode,this@MainActivity)
-
             }
             intent.hasExtra(Constants.TPO_DETAILS) -> {
                 isStudent = false
-                mTPO = intent.getParcelableExtra<TPO>(Constants.TPO_DETAILS)!!
-                collegeCode = mTPO.collegeCode
-                setForTPO()
+                var tpo: TPO = intent.getParcelableExtra<TPO>(Constants.TPO_DETAILS)!!
+                collegeCode = tpo.collegeCode
+                setForTPO(tpo)
             }
         }
     }
 
-    @SuppressLint("RestrictedApi")
-    private fun setForTPO() {
-        setSupportActionBar(toolbar_main_activity)
-        toolbar_main_activity.setNavigationIcon(R.drawable.ic_action_navigation_menu)
-        toolbar_main_activity.setNavigationOnClickListener {
-            toggleDrawer()
-        }
+    /** Setup UI for TPO */
+    private fun setForTPO(tpo: TPO) {
 
-//        nav_view.menu(0).isVisible = false
+        /**Disable "My Profile" option for TPO*/
+
+        //nav_view.menu(0).isVisible = false
         nav_view.setNavigationItemSelectedListener(this)
-        nav_view.getHeaderView(0).findViewById<TextView>(R.id.tv_username).text =
-            "Hi ${mTPO.firstName}"
+        nav_view.getHeaderView(0).findViewById<TextView>(R.id.tv_username).text = "Hi ${tpo.firstName}"
 
-        //TODO get list of companies
-
-        //TODO FAB listener
+        /** Floating Action Button listener*/
         fab.setOnClickListener {
             if (!isFABOpen) {
                 showFABMenu()
@@ -159,30 +173,69 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         tv_block_view.setOnClickListener {
             closeFABMenu()
         }
+        /**Load TPO data to screen from database*/
+        showProgressDialog(getString(R.string.please_wait))
+        Firestore().getAllCompaniesDetailsFromDatabase(
+            collegeCode,
+            roundsOver = 0,
+            this@MainActivity
+        )
     }
 
+    /** Setup UI for Student */
+
     private fun setForStudent() {
-        setSupportActionBar(toolbar_main_activity)
-        toolbar_main_activity.setNavigationIcon(R.drawable.ic_action_navigation_menu)
-
-        toolbar_main_activity.setNavigationOnClickListener {
-            toggleDrawer()
-        }
-
-
-        nav_view.setNavigationItemSelectedListener(this)
         nav_view.getHeaderView(0).findViewById<TextView>(R.id.tv_username).text =
             "Hi ${mStudent.firstName}"
 
+        /**Floating Action Button is only visible to TPO*/
         fab.visibility = View.GONE
         fab_add_new_company.visibility = View.GONE
+
+        /** To load student's data to screen */
+        // Create array of companyNames to fetch data from database
+        var companiesList: ArrayList<String> = ArrayList()
+
+        for ((companyName, lastRound) in mStudent.companiesListAndLastRound) {
+            companyLastRoundHashMap[companyName] = lastRound
+            companiesList.add(companyName)
+        }
+        showProgressDialog(getString(R.string.please_wait))
+        Firestore().getSpecificCompaniesDetailsFromDatabase(
+            companiesList,
+            collegeCode,
+            roundsOver = 0,
+            this@MainActivity
+        )
     }
 
+    private fun showFABMenu() {
+        isFABOpen = true
+
+        tv_block_view.visibility = View.VISIBLE
+        fab.setImageResource(R.drawable.ic_wrong)
+        fab.scaleType = ImageView.ScaleType.FIT_XY
+        ll_add_new_company.animate().translationY(-resources.getDimension(R.dimen.standard_55))
+        tv_add_new_company.visibility = View.VISIBLE
+    }
+
+    private fun closeFABMenu() {
+        isFABOpen = false
+
+        tv_block_view.visibility = View.GONE
+        fab.setImageResource(R.drawable.ic_fab)
+        fab.scaleType = ImageView.ScaleType.FIT_XY
+        ll_add_new_company.animate().translationY(0F)
+        tv_add_new_company.visibility = View.GONE
+    }
+
+    /** Shows items in recycler view */
     fun populateRecyclerView(companiesList: ArrayList<Company>) {
-        Log.i("rv","yes")
+        Log.i("tag",companiesList.size.toString())
         hideProgressDialog()
 
         if (companiesList.size > 0) {
+            /** Setting up recycler view */
             rv_companies_list.visibility = View.VISIBLE
             tv_no_companies_available.visibility = View.GONE
 
@@ -191,6 +244,8 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
             val adapter = CompanyItemsAdapter(this,companiesList)
             rv_companies_list.adapter = adapter
+
+            /** On click listener for each item of recycler view */
             adapter.setOnClickListener(object : CompanyItemsAdapter.OnClickListener {
                 override fun onClick(position: Int, model: Company) {
                     val intent = Intent(this@MainActivity, RoundDetailsActivity::class.java)
@@ -203,64 +258,64 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             tv_no_companies_available.visibility = View.VISIBLE
         }
 
-        if(isStudent){
-            mSharedPreferences =
-                this.getSharedPreferences(Constants.RECRUITZ_PREFERENCES, Context.MODE_PRIVATE)
-
-            val tokenUpdated = mSharedPreferences.getBoolean(Constants.FCM_TOKEN_UPDATED, false)
-
-            if (tokenUpdated) {
-                Log.i("no","no")
-                showProgressDialog(getString(R.string.please_wait))
-                Firestore().loadStudentData(this)
-
-            }
-            else {
-                FirebaseMessaging.getInstance().token
-                    .addOnSuccessListener(this@MainActivity) { token ->
-                        updateFcmTokenInDatabase(token)
-                    }
+        /** Check changes in Firebase Cloud Messaging token */
+        if (isStudent) {
+            checkFCMToken()
+        }
+    }
+    private fun checkFCMToken(){
+        /** Using shared preference in private mode so that other apps cannot access it */
+        mSharedPreferences =
+            this.getSharedPreferences(Constants.RECRUITZ_PREFERENCES, Context.MODE_PRIVATE)
+        val tokenUpdated = mSharedPreferences.getBoolean(Constants.FCM_TOKEN_UPDATED, false)
+        /** If the token is not updated, get a new token and update it in database*/
+        if (!tokenUpdated) {
+            FirebaseMessaging.getInstance().token
+            .addOnSuccessListener(this@MainActivity) { token ->
+                updateFcmTokenInDatabase(token)
             }
         }
     }
 
-    override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
-        when (menuItem.itemId) {
-            R.id.nav_my_profile -> {
-                startActivity(Intent(this, UpdateProfileActivity::class.java))
-                menuItem.isChecked=false
-            }
-            R.id.nav_sign_out -> {
-                showAlertDialog(this@MainActivity, getString(R.string.sign_out_alert_text))
-            }
-        }
-        drawer_layout.closeDrawer(GravityCompat.START)
-        return true
+    /** Update Firebase Cloud Messaging Token in Database */
+    private fun updateFcmTokenInDatabase(token: String) {
+        val studentHashMap = HashMap<String, Any>()
+        studentHashMap[Constants.FCM_TOKEN] = token
+        showProgressDialog(getString(R.string.please_wait))
+        Firestore().updateStudentProfileData(this, studentHashMap)
     }
+
+    /** Successfully Updated Firebase Cloud Messaging Token */
 
     fun tokenUpdateSuccess() {
         hideProgressDialog()
         val editor: SharedPreferences.Editor = mSharedPreferences.edit()
         editor.putBoolean(Constants.FCM_TOKEN_UPDATED, true)
         editor.apply()
-        showProgressDialog(getString(R.string.please_wait))
-        Firestore().loadStudentData(this)
     }
 
-    private fun updateFcmTokenInDatabase(token: String) {
-        val studentHashMap = HashMap<String, Any>()
-        studentHashMap[Constants.FCM_TOKEN] = token
+    /** Listeners for each option inside drawer layout */
+    override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
+        when (menuItem.itemId) {
+            R.id.nav_my_profile -> {
+                /** Takes user to UpdateProfile activity */
+                startActivity(Intent(this, UpdateProfileActivity::class.java))
+                menuItem.isChecked = false
+            }
+            R.id.nav_sign_out -> {
+                /**Here sign outs the user from firebase in this device.*/
+                showAlertDialog(this@MainActivity, getString(R.string.sign_out_alert_text))
+            }
+        }
 
-        showProgressDialog(getString(R.string.please_wait))
-        Firestore().updateStudentProfileData(this, studentHashMap)
+        /** Close the drawer if it is open */
+        if (drawer_layout.isDrawerOpen(GravityCompat.START))
+        drawer_layout.closeDrawer(GravityCompat.START)
+        return true
     }
 
-    fun clearSharedPreferences(){
-        if(isStudent)  mSharedPreferences.edit().clear().apply()
-    }
-
-    fun loadStudentDataSuccess(student : Student){
-        Log.i("main","lsds")
-        hideProgressDialog()
+    /** clears the Firebase Cloud Messaging token stored in device */
+    fun clearSharedPreferences() {
+        if (isStudent) mSharedPreferences.edit().clear().apply()
     }
 }

@@ -22,19 +22,35 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".activities.RoundDetailsActivity"></activity>
-        <activity android:name=".activities.NewCompanyDetailsActivity" />
+        <activity
+            android:name=".activities.RoundDetailsActivity"
+            android:screenOrientation="unspecified" />
+
+        <activity
+            android:name=".activities.NewCompanyDetailsActivity"
+            android:screenOrientation="unspecified" />
+
+        <activity
+            android:name=".activities.SignInActivity"
+            android:screenOrientation="unspecified" />
+
+        <activity
+            android:name=".activities.UpdateProfileActivity"
+            android:screenOrientation="unspecified" />
+
+        <activity
+            android:name=".activities.SignUpActivity"
+            android:screenOrientation="unspecified" />
+
         <activity
             android:name=".activities.IntroActivity"
-            android:screenOrientation="fullSensor" />
+            android:screenOrientation="unspecified" />
+
         <activity android:name=".activities.BaseActivity" />
-        <activity android:name=".activities.SignInActivity" />
-        <activity android:name=".activities.UpdateProfileActivity" />
-        <activity android:name=".activities.SignUpActivity" />
 
         <activity
             android:name=".activities.SplashActivity"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="unspecified"
             android:exported="true">
 
             <intent-filter>
@@ -45,7 +61,7 @@
 
         <activity
             android:name=".activities.MainActivity"
-            android:screenOrientation="fullSensor">
+            android:screenOrientation="unspecified">
         </activity>
 
         <meta-data

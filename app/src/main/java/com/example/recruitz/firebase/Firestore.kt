@@ -13,6 +13,7 @@ import com.google.firebase.firestore.SetOptions
 class Firestore {
     private val mFireStore = FirebaseFirestore.getInstance()
 
+    /** Register student in firestore after sign-up */
     fun registerStudent(activity: SignUpActivity, studentInfo: Student) {
         val id=studentInfo.id
         mFireStore.collection(Constants.STUDENTS)
@@ -75,8 +76,6 @@ class Firestore {
             .document(FirebaseAuthentication().getCurrentUserID())
             .get()
             .addOnSuccessListener { document ->
-                Log.i("detail", document.toString())
-
                 // Here we have received the document snapshot which is converted into the Student Data model object.
                 val loggedInUser = document.toObject(Student::class.java)!!
 
@@ -90,10 +89,6 @@ class Firestore {
                     }
                     is UpdateProfileActivity -> {
                         activity.setStudentDataInUI(loggedInUser)
-                    }
-                    is MainActivity ->{
-                        Log.i("yes","yes")
-                        activity.loadStudentDataSuccess(loggedInUser)
                     }
                 }
             }
@@ -320,15 +315,49 @@ class Firestore {
         activity.updateCompanyInStudentDatabaseSuccess()
     }
 
-    fun getCompaniesListFromDatabase(companyNames : ArrayList<String>,collegeCode : String,activity: MainActivity){
-        if(companyNames.size==0){
+    fun getSpecificCompaniesDetailsFromDatabase(
+        companyNames: ArrayList<String>,
+        collegeCode: String,
+        roundsOver: Int,
+        activity: MainActivity
+    ) {
+        if (companyNames.size == 0) {
             activity.populateRecyclerView(ArrayList())
             return
         }
         mFireStore.collection(Constants.COLLEGES)
             .document(collegeCode)
             .collection(Constants.COMPANIES)
-            .whereIn(Constants.NAME,companyNames)
+            .whereIn(Constants.NAME, companyNames)
+            .whereEqualTo(Constants.ROUNDS_OVER, roundsOver)
+            .get()
+            .addOnSuccessListener { companyDocuments ->
+                val companyObjects: ArrayList<Company> = ArrayList()
+                for (companyDocument in companyDocuments) {
+                    val companyObject = companyDocument.toObject(Company::class.java)
+                    companyObjects.add(companyObject)
+                }
+                activity.populateRecyclerView(companyObjects)
+            }
+            .addOnFailureListener { e ->
+                activity.hideProgressDialog()
+                Log.e(
+                    activity.javaClass.simpleName,
+                    "Error while fetching companies from database.",
+                    e
+                )
+            }
+    }
+
+    fun getAllCompaniesDetailsFromDatabase(
+        collegeCode: String,
+        roundsOver: Int,
+        activity: MainActivity
+    ) {
+        mFireStore.collection(Constants.COLLEGES)
+            .document(collegeCode)
+            .collection(Constants.COMPANIES)
+            .whereEqualTo(Constants.ROUNDS_OVER, roundsOver)
             .get()
             .addOnSuccessListener { companyDocuments ->
                 val companyObjects : ArrayList<Company> = ArrayList()

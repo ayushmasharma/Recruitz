@@ -20,6 +20,7 @@ import com.google.firebase.messaging.RemoteMessage
 
 class FirebaseMessagingService : FirebaseMessagingService() {
 
+    /** When a new message s received */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         print("Done");
@@ -49,6 +50,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         editor.apply()
     }
 
+    /** Sends notification with given title and message */
     private fun sendNotification(title: String, message: String) {
         val intent :Intent
         if (FirebaseAuthentication().getCurrentUserID().isNotEmpty()){

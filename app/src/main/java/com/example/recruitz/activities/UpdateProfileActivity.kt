@@ -27,6 +27,7 @@ class UpdateProfileActivity : BaseActivity() {
 
         showProgressDialog(getString((R.string.please_wait)))
 
+        /** Load student data from database */
         Firestore().loadStudentData(this)
 
         btn_update.setOnClickListener {
@@ -35,6 +36,7 @@ class UpdateProfileActivity : BaseActivity() {
         }
     }
 
+    /** Show branches list in layout */
     private fun addBranchesRadioButtonsInLayout() {
         val branchesRadioGroup = rg_branches_update_profile
 
@@ -45,21 +47,57 @@ class UpdateProfileActivity : BaseActivity() {
         }
     }
 
-    /**
-     * A function to update the user profile details into the database.
-     */
+    /** A function to set the existing details in UI. **/
+    fun setStudentDataInUI(student: Student) {
+        hideProgressDialog()
+        // Initialize the user details variable
+        mStudentDetails = student
+
+        et_first_name_update_profile.setText(student.firstName)
+        et_last_name_update_profile.setText(student.lastName)
+        et_roll_number_update_profile.setText(student.rollNumber)
+        et_college_code_update_profile.setText(student.collegeCode)
+
+        for (i in 0 until rg_branches_update_profile.childCount) {
+
+            val radioButton = rg_branches_update_profile.getChildAt(i) as RadioButton
+            if (radioButton.text.toString() == student.branch) {
+                rg_branches_update_profile.check(radioButton.id)
+                break
+            }
+        }
+
+        et_cgpa_update_profile.setText(student.cgpa.toString())
+        et_backlogs.setText(student.numberOfBacklogs.toString())
+    }
+
+    /** A function to update the user profile details into the database. */
     private fun updateStudentProfileData() {
 
+        /** Read the data from layout and trim the space */
         val firstname = et_first_name_update_profile.text.toString().trim { it <= ' ' }
         val lastName = et_last_name_update_profile.text.toString().trim { it <= ' ' }
         val rollNumber = et_roll_number_update_profile.text.toString().trim { it <= ' ' }
         val collegeCode = et_college_code_update_profile.text.toString().trim { it <= ' ' }
         val selectedBranchId = rg_branches_update_profile.checkedRadioButtonId
         val cgpa = et_cgpa_update_profile.text.toString().trim { it <= ' ' }
-        val backlogs = et_backlogs.text.toString().trim { it <= ' '}
+        val backlogs = et_backlogs.text.toString().trim { it <= ' ' }
 
-        if(validateStudentDetails(firstname,rollNumber,collegeCode,selectedBranchId,cgpa, backlogs)){
+        /** Validate inputs */
+        if (validateStudentDetails(
+                firstname,
+                rollNumber,
+                collegeCode,
+                selectedBranchId,
+                cgpa,
+                backlogs
+            )
+        ) {
+
+            /** Create a hashmap of fields to be updated */
             val userHashMap = HashMap<String, Any>()
+
+            /** Check if the entered value is same as previous vale */
             if (firstname != mStudentDetails.firstName) {
                 userHashMap[Constants.FIRST_NAME] = firstname
             }
@@ -99,6 +137,7 @@ class UpdateProfileActivity : BaseActivity() {
                 Firestore().updateStudentProfileData(this@UpdateProfileActivity, userHashMap)
             }
             else{
+                /** if no changes detected, then just send to Main activity */
                 intent = Intent(this, MainActivity::class.java)
                 intent.putExtra(Constants.STUDENT_DETAILS, mStudentDetails)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -140,39 +179,14 @@ class UpdateProfileActivity : BaseActivity() {
     }
 
     /**
-     * A function to set the existing details in UI.
-     */
-    fun setStudentDataInUI(student : Student) {
-        hideProgressDialog()
-        // Initialize the user details variable
-        mStudentDetails = student
-
-        et_first_name_update_profile.setText(student.firstName)
-        et_last_name_update_profile.setText(student.lastName)
-        et_roll_number_update_profile.setText(student.rollNumber)
-        et_college_code_update_profile.setText(student.collegeCode)
-
-        Log.i("branch",student.branch)
-        for(i in 0 until rg_branches_update_profile.childCount){
-            val radioButton = rg_branches_update_profile.getChildAt(i) as RadioButton
-            Log.i("branch",radioButton.text.toString())
-            if(radioButton.text.toString() == student.branch){
-                rg_branches_update_profile.check(radioButton.id)
-                break
-            }
-        }
-
-        et_cgpa_update_profile.setText(student.cgpa.toString())
-        et_backlogs.setText(student.numberOfBacklogs.toString())
-    }
-
-    /**
      * A function to notify the user profile is updated successfully.
      */
     fun profileUpdateSuccess() {
         hideProgressDialog()
         setResult(Activity.RESULT_OK)
         Toast.makeText(this, "Profile updated successfully.", Toast.LENGTH_LONG).show()
+
+        /** Send the student to Main activity */
         intent = Intent(this, MainActivity::class.java)
         intent.putExtra(Constants.STUDENT_DETAILS, mStudentDetails)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
