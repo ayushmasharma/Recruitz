@@ -1,14 +1,16 @@
 package com.example.recruitz.activities
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
+import android.widget.ArrayAdapter
 import android.widget.RadioButton
 import android.widget.Toast
 import com.example.recruitz.R
 import com.example.recruitz.firebase.Firestore
+import com.example.recruitz.models.CompanyNameAndLastRound
 import com.example.recruitz.models.Student
 import com.example.recruitz.utils.Constants
 import kotlinx.android.synthetic.main.activity_update_profile.*
@@ -18,22 +20,41 @@ class UpdateProfileActivity : BaseActivity() {
     // A global variable for user details.
     private lateinit var mStudentDetails: Student
 
+    /** Create a hashmap of fields to be updated */
+    val userHashMap = HashMap<String, Any>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_update_profile)
         setupActionBar(toolbar_update_profile)
 
         addBranchesRadioButtonsInLayout()
-
-        showProgressDialog(getString((R.string.please_wait)))
-
-        /** Load student data from database */
-        Firestore().loadStudentData(this)
+        addCollegeNamesInLayout()
 
         btn_update.setOnClickListener {
             // Call a function to update user details in the database.
             updateStudentProfileData()
         }
+    }
+
+    /** Show college names in layout */
+    private fun addCollegeNamesInLayout(){
+        /** First fetch the college names from the database */
+        showProgressDialog(getString((R.string.please_wait)))
+        Firestore().getCollegeNames(this)
+    }
+
+    /** College Names successfully retrieved , now add them in layout */
+    fun getCollegeNamesSuccess(collegeNames : ArrayList<String>){
+        collegeNames.add(0,Constants.SELECT_COLLEGE_NAME)
+        /**create an adapter to describe how the items are displayed*/
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, collegeNames)
+        /**set the spinners adapter to the previously created one.*/
+        dropdown_college_name.adapter = adapter
+        dropdown_college_name.setSelection(0)
+
+        /** Now load student data from database */
+        Firestore().loadStudentData(this)
     }
 
     /** Show branches list in layout */
@@ -49,15 +70,15 @@ class UpdateProfileActivity : BaseActivity() {
 
     /** A function to set the existing details in UI. **/
     fun setStudentDataInUI(student: Student) {
-        hideProgressDialog()
         // Initialize the user details variable
         mStudentDetails = student
 
         et_first_name_update_profile.setText(student.firstName)
         et_last_name_update_profile.setText(student.lastName)
         et_roll_number_update_profile.setText(student.rollNumber)
-        et_college_code_update_profile.setText(student.collegeCode)
-
+        val dropdownAdapter = dropdown_college_name.adapter as ArrayAdapter<String>
+        val collegeNamePosition =dropdownAdapter.getPosition(student.collegeCode)
+        dropdown_college_name.setSelection(collegeNamePosition)
         for (i in 0 until rg_branches_update_profile.childCount) {
 
             val radioButton = rg_branches_update_profile.getChildAt(i) as RadioButton
@@ -69,6 +90,28 @@ class UpdateProfileActivity : BaseActivity() {
 
         et_cgpa_update_profile.setText(student.cgpa.toString())
         et_backlogs.setText(student.numberOfBacklogs.toString())
+
+        /** Get college details to check if update
+         * profile button is to be enabled or disabled */
+        if(mStudentDetails.collegeCode.isNotEmpty())
+            getCollegeDetails()
+        else
+            hideProgressDialog()
+    }
+
+    /** Fetch college details from database */
+    private fun getCollegeDetails(){
+        Firestore().getCollege(mStudentDetails.collegeCode, this)
+    }
+
+    /** College details are fetched successfully */
+    @SuppressLint("UseCompatLoadingForDrawables")
+    fun getCollegeSuccess(isUpdateButtonEnabled: Long) {
+        hideProgressDialog()
+        val one : Long =1
+        btn_update.isEnabled = isUpdateButtonEnabled == one
+        if (isUpdateButtonEnabled != one) btn_update.background =
+            getDrawable(R.drawable.grey_border_shape_button_rounded)
     }
 
     /** A function to update the user profile details into the database. */
@@ -78,7 +121,7 @@ class UpdateProfileActivity : BaseActivity() {
         val firstname = et_first_name_update_profile.text.toString().trim { it <= ' ' }
         val lastName = et_last_name_update_profile.text.toString().trim { it <= ' ' }
         val rollNumber = et_roll_number_update_profile.text.toString().trim { it <= ' ' }
-        val collegeCode = et_college_code_update_profile.text.toString().trim { it <= ' ' }
+        val collegeName = dropdown_college_name.selectedItem.toString()
         val selectedBranchId = rg_branches_update_profile.checkedRadioButtonId
         val cgpa = et_cgpa_update_profile.text.toString().trim { it <= ' ' }
         val backlogs = et_backlogs.text.toString().trim { it <= ' ' }
@@ -87,16 +130,12 @@ class UpdateProfileActivity : BaseActivity() {
         if (validateStudentDetails(
                 firstname,
                 rollNumber,
-                collegeCode,
+                collegeName,
                 selectedBranchId,
                 cgpa,
                 backlogs
             )
         ) {
-
-            /** Create a hashmap of fields to be updated */
-            val userHashMap = HashMap<String, Any>()
-
             /** Check if the entered value is same as previous vale */
             if (firstname != mStudentDetails.firstName) {
                 userHashMap[Constants.FIRST_NAME] = firstname
@@ -107,8 +146,8 @@ class UpdateProfileActivity : BaseActivity() {
             if(rollNumber != mStudentDetails.rollNumber){
                 userHashMap[Constants.ROLL_NUMBER] = rollNumber
             }
-            if (collegeCode != mStudentDetails.collegeCode) {
-                userHashMap[Constants.COLLEGE_CODE] = collegeCode
+            if (collegeName != mStudentDetails.collegeCode) {
+                userHashMap[Constants.COLLEGE_CODE] = collegeName
             }
 
             val selectedBranchRadioButton : RadioButton = findViewById(selectedBranchId)
@@ -125,16 +164,29 @@ class UpdateProfileActivity : BaseActivity() {
 
             // Update the data in the database.
             if(userHashMap.size > 0) {
+                val isRollNumberEmpty = mStudentDetails.rollNumber.isEmpty()
+
+                /** Set the mStudents global variable */
                 mStudentDetails.firstName=firstname
                 mStudentDetails.lastName=lastName
                 mStudentDetails.rollNumber=rollNumber
                 mStudentDetails.branch=selectedBranch
-                mStudentDetails.collegeCode=collegeCode
+                mStudentDetails.collegeCode=collegeName
                 mStudentDetails.cgpa=cgpa.toDouble()
                 mStudentDetails.numberOfBacklogs = backlogs.toInt()
 
-                showProgressDialog(resources.getString(R.string.please_wait))
-                Firestore().updateStudentProfileData(this@UpdateProfileActivity, userHashMap)
+                /** If the roll number is empty, then that means the student
+                 * is updating profile for the first time after sign up,
+                 * we need to update this students database with the companies
+                 * which are already stored in the database  */
+                if(isRollNumberEmpty){
+                    showProgressDialog(getString(R.string.please_wait))
+                    Firestore().getEligibleCompaniesNamesForOneStudent(mStudentDetails,this)
+                }
+                else{
+                    showProgressDialog(resources.getString(R.string.please_wait))
+                    Firestore().updateStudentProfileData(this@UpdateProfileActivity, userHashMap)
+                }
             }
             else{
                 /** if no changes detected, then just send to Main activity */
@@ -147,6 +199,25 @@ class UpdateProfileActivity : BaseActivity() {
         }
     }
 
+    fun getEligibleCompaniesNamesSuccess(companyNames : ArrayList<String>){
+        hideProgressDialog()
+
+        //TODO UPDATE COMPANY DATA (put student in round 0)
+
+        var companyNamesAndLastRounds = ArrayList<CompanyNameAndLastRound>()
+        for(companyName in companyNames){
+            var companyNameAndLastRoundObject = CompanyNameAndLastRound()
+            companyNameAndLastRoundObject.companyName = companyName
+            companyNameAndLastRoundObject.lastRound = 1
+            companyNamesAndLastRounds.add(companyNameAndLastRoundObject)
+        }
+        userHashMap[Constants.COMPANY_NAME_AND_LAST_ROUND]=companyNamesAndLastRounds
+        mStudentDetails.companiesListAndLastRound = companyNamesAndLastRounds
+
+        showProgressDialog(resources.getString(R.string.please_wait))
+        Firestore().updateStudentProfileData(this@UpdateProfileActivity, userHashMap)
+    }
+
     private fun validateStudentDetails(firstName: String,rollNumber : String, collegeCode :String,branchId: Int, cgpa: String, backlogs : String): Boolean {        return when {
             TextUtils.isEmpty(firstName) -> {
                 showErrorSnackBar(getString(R.string.enter_first_name))
@@ -156,8 +227,8 @@ class UpdateProfileActivity : BaseActivity() {
                 showErrorSnackBar(getString(R.string.enter_roll_number))
                 false
             }
-            TextUtils.isEmpty(collegeCode) -> {
-                showErrorSnackBar(getString(R.string.enter_your_college_code))
+            collegeCode == Constants.SELECT_COLLEGE_NAME -> {
+                showErrorSnackBar(getString(R.string.select_college_name))
                 false
             }
             branchId == -1 -> {

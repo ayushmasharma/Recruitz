@@ -77,18 +77,44 @@
     <string name="enter_deadline_to_apply">Please enter deadline to apply</string>
     <string name="enter_backlogs_details">Please enter backlogs details</string>
     <string name="enter_ctc_details">Please enter CTC details</string>
-    <string name="enter_job_profile">Please enter job profiles.</string>    <string name="backlogs">Backlogs</string>
+    <string name="enter_job_profile">Please enter job profiles.</string>
+    <string name="backlogs">Backlogs</string>
     <string name="allowed">Allowed</string>
     <string name="not_allowed">Not allowed</string>
     <string name="company_is_added">Company added successfully</string>
     <string name="default_notification_channel_id">Recruitz notification channel Id</string>
 
     <string name="tap_to_view_more">Tap to view more</string>
-    <string name="enter_your_college_code">Please enter your college code.</string>
+    <string name="select_college_name">Please select your college name.</string>
     <string name="select_you_branch">Please select your branch.</string>
     <string name="enter_cgpa">Please enter your cgpa.</string>
     <string name="enter_roll_number">Please enter your roll number.</string>
     <string name="number_of_backlogs">Number of backlogs</string>
     <string name="enter_backlogs">Please enter number of backlogs till date.</string>
-
+    <string name="select_college">Select your College name</string>
+    <string name="add_new_pr">Add a PR</string>
+    <string name="add_pr">Add Placement Representative</string>
+    <string name="add">ADD</string>
+    <string name="disable_update_profile_button_fab">Disable update profile button</string>
+    <string name="disable_update_profile_button">Update profile button for all the students will be disabled.</string>
+    <string name="enable_update_profile_button">Update profile button for all the students will be enabled.</string>
+    <string name="enable_update_profile_button_fab">Enable  update profile button</string>
+    <string name="rounds_details">Round details</string>
+    <string name="about_company">About company</string>
+    <string name="add_round">Add new round</string>
+    <string name="round_name">Round name</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="venue">Venue</string>
+    <string name="enter_round_name">Please add round name</string>
+    <string name="enter_round_date">Please enter round date</string>
+    <string name="enter_round_time">Please enter round time</string>
+    <string name="enter_round_venue">Please enter venue of round</string>
+    <string name="cleared">Cleared</string>
+    <string name="declare_results">Declare results</string>
+    <string name="view_results">View results</string>
+    <string name="no_rounds_added">No rounds have been added yet</string>
+    <string name="results">Results</string>
+    <string name="roll_number">ROLL NUMBER</string>
+    <string name="name">NAME</string>
 </resources>

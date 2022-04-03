@@ -1,7 +1,9 @@
 package com.example.recruitz.firebase
 
+import android.app.Activity
 import android.util.Log
 import android.widget.Toast
+import com.example.recruitz.activities.AddPrActivity
 import com.example.recruitz.models.TPO
 import com.example.recruitz.activities.SignInActivity
 import com.example.recruitz.activities.SignUpActivity
@@ -42,7 +44,7 @@ class FirebaseAuthentication() {
             }
     }
 
-    fun signUpTPO(tpo : TPO, password: String, activity : SignUpActivity){
+    fun signUpTPO(tpo : TPO, password: String, activity : Activity){
         val email = tpo.email
         auth = Firebase.auth
         auth.createUserWithEmailAndPassword(email, password)
@@ -53,8 +55,15 @@ class FirebaseAuthentication() {
                     val firebaseUser: FirebaseUser = task.result!!.user!!
                     //val registeredEmail = firebaseUser.email!!
                     tpo.id = firebaseUser.uid
-                    // call the registerUser function of FirestoreClass to make an entry in the database.
-                    Firestore().registerTPO(activity, tpo)
+                    when(activity){
+                        is SignUpActivity ->{
+                            // call the registerUser function of FirestoreClass to make an entry in the database.
+                            Firestore().registerTPO(activity, tpo)
+                        }
+                        is AddPrActivity ->{
+                            Firestore().registerTPO(activity, tpo)
+                        }
+                    }
                 } else {
                     Toast.makeText(
                         activity,
@@ -62,9 +71,15 @@ class FirebaseAuthentication() {
                         Toast.LENGTH_SHORT
                     ).show()
                     Log.e("signuperror", "${task.exception!!.message}")
-                    activity.hideProgressDialog()
+                    when(activity){
+                        is SignUpActivity ->{
+                            activity.hideProgressDialog()
+                        }
+                        is AddPrActivity ->{
+                            activity.hideProgressDialog()
+                        }
+                    }
                 }
-
             }
     }
 

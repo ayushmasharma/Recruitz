@@ -1,6 +1,18 @@
 package com.example.recruitz.utils
 
 object Constants {
+    const val SECOND_LAST_ROUND: String = "Second last round"
+    const val ROUND_ARRAY = "Round array"
+    const val ROUND: String ="round"
+    const val SCREENING_ROUND: String= "Screening round"
+    const val OVER = "OVER"
+    const val NOT_CLEARED ="NOT CLEARED"
+    const val PENDING = " PENDING"
+    const val CLEARED ="CLEARED"
+    const val ROUNDS_LIST ="roundsList"
+    const val COMPANY_DETAIL: String = "Company Details"
+    const val DECLARE_RESULTS = "Declare results"
+    const val VIEW_RESULTS = "View results"
     // Firebase Constants
     // This  is used for the collection names used in firestore
 
@@ -26,6 +38,11 @@ object Constants {
     const val COMPANY_NAME_AND_LAST_ROUND = "companiesListAndLastRound"
     const val NUMBER_OF_BACKLOGS = "numberOfBacklogs"
     const val ROUNDS_OVER = "roundsOver"
+    const val SELECT_COLLEGE_NAME = "Select college name"
+    const val IS_UPDATE_BUTTON_ENABLED: String="updateProfileButtonEnabled"
+    const val BRANCHES_ALLOWED = "branchesAllowed"
+    const val CGPA_CUT_OFF="cgpaCutOff"
+    const val DEADLINE_TO_APPLY="deadlineToApply"
 
     const val STUDENT_DETAILS : String ="studentDetails"
     const val TPO_DETAILS : String ="tpoDetails"

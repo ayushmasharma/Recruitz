@@ -13,13 +13,22 @@
         <entry key="..\:/Users/ayush/AndroidStudioProjects/Recruitz/app/src/main/res/layout/activity_splash.xml" value="0.266304347826087" />
         <entry key="..\:/Users/ayush/AndroidStudioProjects/Recruitz/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.290625" />
         <entry key="..\:/Users/ayush/AndroidStudioProjects/Recruitz/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.15989583333333332" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable-v24/grey_border_shape_button_rounded.xml" value="0.16041666666666668" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable-v24/ic_action_navigation_menu.xml" value="0.28307692307692306" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable-v24/nav_header_main_background.xml" value="0.28307692307692306" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/baseline_style_24.xml" value="0.16041666666666668" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/custom_radio_button.xml" value="0.28307692307692306" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/ic_fab.xml" value="0.28307692307692306" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/ic_lock.xml" value="0.290625" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/ic_wrong.xml" value="0.290625" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/regular_state.xml" value="0.28307692307692306" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/selected_state.xml" value="0.28307692307692306" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/drawable/shape_button_rounded_green.xml" value="0.16041666666666668" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout-v23/activity_round_details.xml" value="0.21920289855072464" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_about_company.xml" value="0.21920289855072464" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_add_pr.xml" value="0.22916666666666666" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_add_round.xml" value="0.20923913043478262" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_declare_results.xml" value="0.20923913043478262" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_intro.xml" value="0.12001811594202899" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_main.xml" value="0.13196555217831812" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_new_company_details.xml" value="0.13196555217831812" />
@@ -30,13 +39,16 @@
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_splash.xml" value="0.12907608695652173" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_update_profile.xml" value="0.12001811594202899" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_update_profile.xml " value="0.12001811594202899" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/activity_view_results.xml" value="0.20923913043478262" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/app_bar_main.xml" value="0.13196555217831812" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/content_main.xml" value="0.13196555217831812" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/dialog_progress.xml" value="0.12001811594202899" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/item_company.xml" value="0.1" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/item_round.xml" value="0.21195652173913043" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/layout/nav_header_main.xml" value="0.13196555217831812" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/menu/activity_main_drawer.xml" value="0.2037037037037037" />
         <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/menu/bottom_nav_menu.xml" value="0.27447916666666666" />
+        <entry key="..\:/Users/ayush/Recruitz/app/src/main/res/menu/options_menu.xml" value="0.27447916666666666" />
       </map>
     </option>
   </component>

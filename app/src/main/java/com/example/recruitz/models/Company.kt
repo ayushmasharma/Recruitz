@@ -1,6 +1,5 @@
 package com.example.recruitz.models
 
-import android.os.Parcel
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import kotlin.collections.ArrayList
@@ -13,7 +12,7 @@ data class Company(
     var branchesAllowed : ArrayList<String> = ArrayList(),
     var ctcDetails : String ="",
     var location : String="",
-    var deadlineToApply : String ="",
+    var deadlineToApply : Long = 0,
     var jobProfile : String ="",
     var roundsList : ArrayList<Round> = ArrayList(),
     var roundsOver : Int=0

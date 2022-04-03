@@ -49,7 +49,7 @@ class SignUpActivity : BaseActivity() {
 
         if (validateForm(firstName,email, password)) {
             if(isStudent){
-                val student = Student(companiesListAndLastRound = ArrayList())
+                val student = Student()
                 student.firstName=firstName
                 student.lastName=lastName
                 student.email=email
@@ -66,6 +66,7 @@ class SignUpActivity : BaseActivity() {
                 tpo.email=email
 
                 val college = College()
+                college.collegeName = collegeName
 
                 // Show the progress dialog.
                 showProgressDialog(resources.getString(R.string.please_wait))
