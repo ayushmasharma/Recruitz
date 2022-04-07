@@ -103,10 +103,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="bold"
+                android:visibility="gone"
                 android:layout_gravity="center"
                 android:textColor="@color/black"
-                android:visibility="gone"
-                android:layout_marginTop="30dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginRight="10dp"
                 android:text="@string/add_new_company"/>
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -175,11 +175,9 @@ class NewCompanyDetailsActivity : BaseActivity() {
     fun getAllStudentsSuccess(students : ArrayList<Student>){
         hideProgressDialog()
 
-        for(student in students){
-            val message = "${company.name}'s Screening round not cleared"
-            if(!eligibleStudents.contains(student)){
-                SendNotificationToEligibleStudentsAsyncTask(message, student.fcmToken).execute()
-            }
+        for(student in eligibleStudents){
+            val message = "${company.name}'s Screening round cleared"
+            SendNotificationToEligibleStudentsAsyncTask(message, student.fcmToken).execute()
         }
         finish()
     }

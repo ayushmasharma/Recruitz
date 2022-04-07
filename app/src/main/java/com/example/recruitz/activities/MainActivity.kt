@@ -212,6 +212,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     /** Setup UI for Student */
 
     private fun setForStudent() {
+        nav_view.setNavigationItemSelectedListener(this)
         nav_view.getHeaderView(0).findViewById<TextView>(R.id.tv_username).text =
             "Hi ${mStudent.firstName}"
 
@@ -286,10 +287,10 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         fab.scaleType = ImageView.ScaleType.FIT_XY
         ll_add_new_company.animate().translationY(-resources.getDimension(R.dimen.standard_55))
         ll_add_new_pr.animate().translationY(-resources.getDimension(R.dimen.standard_105))
-        ll_enable_or_disable_update_profile.animate().translationY(-resources.getDimension(R.dimen.standard_155))
+//        ll_enable_or_disable_update_profile.animate().translationY(-resources.getDimension(R.dimen.standard_155))
         tv_add_new_company.visibility = View.VISIBLE
         tv_add_new_pr.visibility = View.VISIBLE
-        tv_enable_or_disable_update_profile.visibility = View.VISIBLE
+//        tv_enable_or_disable_update_profile.visibility = View.VISIBLE
     }
 
     private fun closeFABMenu() {
